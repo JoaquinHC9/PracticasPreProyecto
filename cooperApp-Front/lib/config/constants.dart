@@ -1,3 +1,3 @@
 class AppConstants {
-  static const String backendBaseUrl = 'https://tallermovilg2-back.onrender.com/';
+  static const String backendBaseUrl = 'http://localhost:8080/';
 }
