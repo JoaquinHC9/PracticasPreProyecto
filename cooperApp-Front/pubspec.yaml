@@ -1,0 +1,39 @@
+name: cooperapp
+description: "Aplicativo Movil CooperApp"
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.2
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.4.0
+  shared_preferences: ^2.2.2
+  intl: ^0.18.1
+  lucide_icons: ^0.257.0
+  provider: ^6.1.1
+  cupertino_icons: ^1.0.8
+  file_picker: ^8.1.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/ardillas.png"
+  min_sdk_android: 21
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/ardillas.png
+    - assets/images/frecuencia.jpg
+    - assets/images/montos.png
+    - assets/images/abandono.jpg
