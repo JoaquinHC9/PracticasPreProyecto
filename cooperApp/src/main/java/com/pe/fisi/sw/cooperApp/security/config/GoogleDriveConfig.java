@@ -17,7 +17,7 @@ import java.util.Collections;
 public class GoogleDriveConfig {
 
     private static final String APPLICATION_NAME = "cooperApp";
-    private static final String CREDENTIALS_FILE = "google-drive.json";
+    private static final String CREDENTIALS_FILE = "/etc/secrets/google-drive.json";
     // Scope actualizado para incluir permisos
     private static final String DRIVE_SCOPE = "https://www.googleapis.com/auth/drive";
 
@@ -25,13 +25,7 @@ public class GoogleDriveConfig {
     public GoogleCredentials googleCredentials() throws IOException {
         try {
             // Primero intentar desde el classpath
-            InputStream credentialsStream = getClass().getClassLoader()
-                    .getResourceAsStream(CREDENTIALS_FILE);
-
-            if (credentialsStream == null) {
-                // Si no está en classpath, intentar desde el directorio raíz
-                credentialsStream = new ClassPathResource("../" + CREDENTIALS_FILE).getInputStream();
-            }
+            InputStream credentialsStream = new java.io.FileInputStream(CREDENTIALS_FILE);
 
             GoogleCredentials credentials;
             try (InputStream stream = credentialsStream) {
