@@ -2,9 +2,12 @@ package com.pe.fisi.sw.cooperApp.files.service;
 
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
+import com.pe.fisi.sw.cooperApp.security.config.GoogleOAuthDriveService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -15,34 +18,74 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@ConditionalOnProperty(name = "google.drive.auth-type", havingValue = "oauth", matchIfMissing = false)
 public class DriveFolderService {
-    private final Drive driveService;
-
-    // ID de la carpeta compartida que creaste
-    private static final String SHARED_FOLDER_ID = "1R7wwF26VwkptDDkLiCsGbudQHaI8nkn0";
+    private final GoogleOAuthDriveService googleOAuthDriveService;
 
     /**
-     * Crea una subcarpeta dentro de la carpeta compartida
+     * Crea una subcarpeta en la carpeta raíz de la cuenta personal OAuth
+     * Los archivos se guardarán en: My Drive > CooperApp > [cuentaUid_timestamp]
      */
-    public String createSubFolder(String cuentaUid) throws IOException {
-        String subFolderName = generateFolderName(cuentaUid);
-
+    public Mono<String> createSubFolder(String cuentaUid) {
+        return googleOAuthDriveService.getDriveClient()
+                .flatMap(driveService -> Mono.fromCallable(() -> {
+                    String subFolderName = generateFolderName(cuentaUid);
+                    
+                    // Primero, obtener o crear la carpeta raíz "CooperApp"
+                    String cooperAppFolderId = getOrCreateCooperAppFolder(driveService);
+                    
+                    // Crear subcarpeta dentro de CooperApp
+                    File folderMetadata = new File();
+                    folderMetadata.setName(subFolderName);
+                    folderMetadata.setMimeType("application/vnd.google-apps.folder");
+                    folderMetadata.setParents(Collections.singletonList(cooperAppFolderId));
+                    
+                    File folder = driveService.files()
+                            .create(folderMetadata)
+                            .setFields("id")
+                            .execute();
+                    
+                    log.debug("Subcarpeta creada en Google Drive: {} con ID: {}", subFolderName, folder.getId());
+                    log.info("Carpeta de reporte creada: {} - Ver en: https://drive.google.com/drive/folders/{}", subFolderName, folder.getId());
+                    return folder.getId();
+                }));
+    }
+    
+    /**
+     * Obtiene el ID de la carpeta "CooperApp" o la crea si no existe
+     */
+    private String getOrCreateCooperAppFolder(Drive driveService) throws IOException {
+        String cooperAppFolderName = "CooperApp";
+        
+        // Buscar si ya existe la carpeta CooperApp en My Drive
+        com.google.api.services.drive.model.FileList result = driveService.files()
+                .list()
+                .setQ("name='" + cooperAppFolderName + "' and mimeType='application/vnd.google-apps.folder' and trashed=false")
+                .setSpaces("drive")
+                .setFields("files(id, name)")
+                .setPageSize(1)
+                .execute();
+        
+        if (result.getFiles() != null && !result.getFiles().isEmpty()) {
+            String folderId = result.getFiles().get(0).getId();
+            log.debug("Carpeta CooperApp encontrada con ID: {}", folderId);
+            return folderId;
+        }
+        
+        // Si no existe, crearla
         File folderMetadata = new File();
-        folderMetadata.setName(subFolderName);
+        folderMetadata.setName(cooperAppFolderName);
         folderMetadata.setMimeType("application/vnd.google-apps.folder");
-        // IMPORTANTE: Establecer la carpeta padre como la carpeta compartida
-        folderMetadata.setParents(Collections.singletonList(SHARED_FOLDER_ID));
-
+        
         File folder = driveService.files()
                 .create(folderMetadata)
                 .setFields("id")
                 .execute();
-
-        log.debug("Subcarpeta creada en Google Drive: {} con ID: {}", subFolderName, folder.getId());
-        log.info("Subcarpeta creada: {} - Ver en: https://drive.google.com/drive/folders/{}", subFolderName, folder.getId());
+        
+        log.info("Carpeta CooperApp creada con ID: {}", folder.getId());
         return folder.getId();
     }
-
+    
     /**
      * Valida los parámetros de entrada
      */

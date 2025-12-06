@@ -5,7 +5,10 @@ import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.model.File;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -17,20 +20,33 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class GoogleUploadDriveService  implements FileUploader {
+@ConditionalOnProperty(name = "google.drive.auth-type", havingValue = "oauth", matchIfMissing = false)
+public class GoogleUploadDriveService implements FileUploader {
     private final DriveFolderService folderService;
     private final GoogleDriveFileService fileService;
+    
     /**
-     * Sube una lista de archivos a Google Drive dentro de una subcarpeta específica
+     * Sube una lista de archivos a Google Drive dentro de una subcarpeta específica (REACTIVO)
      * @param files Lista de archivos a subir
      * @param cuentaUid Identificador de la cuenta para nombrar la subcarpeta
-     * @return String con las URLs de los archivos subidos separadas por salto de línea
+     * @return Mono con String conteniendo las URLs de los archivos subidos separadas por salto de línea
      * @throws IOException Si hay error en la subida
      */
     public String uploadFiles(List<java.io.File> files, String cuentaUid) throws IOException {
+        // Este método es síncrono porque es requerido por la interfaz FileUploader
+        // En realidad, esta es una limitación de diseño. Lo ideal sería hacer la interfaz reactiva
         folderService.validateInputs(files, cuentaUid);
-        String subFolderId = folderService.createSubFolder(cuentaUid);
-        List<String> fileUrls = fileService.uploadFilesToFolder(files,subFolderId);
-        return String.join("\n", fileUrls);
+        throw new IOException("Usa uploadFilesReactive en lugar de uploadFiles para OAuth");
+    }
+    
+    /**
+     * Versión reactiva del upload
+     */
+    public Mono<String> uploadFilesReactive(List<java.io.File> files, String cuentaUid) {
+        folderService.validateInputs(files, cuentaUid);
+        
+        return folderService.createSubFolder(cuentaUid)
+                .flatMap(subFolderId -> fileService.uploadFilesToFolderReactive(files, subFolderId)
+                        .map(fileUrls -> String.join("\n", fileUrls)));
     }
 }

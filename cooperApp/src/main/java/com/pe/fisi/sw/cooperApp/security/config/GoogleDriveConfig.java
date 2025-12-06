@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 
-@Configuration
+//@Configuration
 public class GoogleDriveConfig {
 
     private static final String APPLICATION_NAME = "cooperApp";

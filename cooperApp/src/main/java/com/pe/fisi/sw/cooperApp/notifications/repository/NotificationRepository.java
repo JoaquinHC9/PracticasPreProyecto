@@ -61,13 +61,13 @@ public class NotificationRepository {
                     String documentId = firestore.collection(NOTIFICATIONS).document().getId();
                     event.setIdNotification(documentId); // Asigna el ID del documento a la notificación
                     firestore.collection(NOTIFICATIONS).document(documentId).set(event).get();
-                    log.info("🔔 Notificación guardada en Firestore con ID: {}", documentId);
+                    log.info("Notificación guardada en Firestore con ID: {}", documentId);
                     return true;
                 })
                 .subscribeOn(Schedulers.boundedElastic())
                 .then()
                 .onErrorResume(e -> {
-                    log.error("❌ Error al guardar notificación: {}", e.getMessage());
+                    log.error("Error al guardar notificación: {}", e.getMessage());
                     return Mono.error(new RuntimeException("Error al guardar notificación", e));
                 });
     }
