@@ -37,7 +37,7 @@ public class OAuthTokenService {
     @Value("${google.drive.redirect-uri}")
     private String redirectUri;
 
-    private static final String CREDENTIALS_FILE = "/etc/secrets/client-secret.json";
+    private static final String CREDENTIALS_FILE = "/etc/secrets/client_secret.json";
     private static final JsonFactory JSON_FACTORY = GsonFactory.getDefaultInstance();
 
     /**
