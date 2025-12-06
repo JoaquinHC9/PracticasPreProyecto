@@ -14,7 +14,7 @@ COPY . .
 RUN mvn clean package -DskipTests
 
 # Etapa de ejecución
-FROM openjdk:21-jdk-slim
+FROM eclipse-temurin:21-jdk-jammy
 
 # Exponer el puerto 8080 para la API
 EXPOSE 8080
