@@ -3,7 +3,7 @@ import 'package:http/http.dart' as http;
 import '../models/input_features.dart';
 
 class PrediccionService {
-  final String baseUrl = "https://tallermovilg2ml-010e0a8a58c1.herokuapp.com";
+  final String baseUrl = "https://e69c1f8e3457.ngrok-free.app";
   Future<Map<String, dynamic>> predecir(InputFeatures input) async {
     final url = Uri.parse("$baseUrl/predict");
     final response = await http.post(

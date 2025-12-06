@@ -56,10 +56,53 @@ class AuthService {
     }
   }
 
-  // 🔐 NUEVO: Función para cerrar sesión
+  // NUEVO: Función para cerrar sesión
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('token');
     print('Sesión cerrada: token eliminado');
   }
+  Future<bool> sendResetCode(String email) async {
+  final url = Uri.parse('${_baseUrl}v1/auth/reset-password/request');
+
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({"email": email}),
+  );
+
+  if (response.statusCode == 200) {
+    return true;
+  } else {
+    print(response.body);
+    return false;
+  }
+}
+
+// Confirmar nueva contraseña
+Future<bool> confirmResetPassword({
+  required String email,
+  required String code,
+  required String newPassword,
+}) async {
+  final url = Uri.parse('${_baseUrl}v1/auth/reset-password/confirm');
+
+  final response = await http.post(
+    url,
+    headers: {'Content-Type': 'application/json'},
+    body: jsonEncode({
+      "email": email,
+      "code": code,
+      "newPassword": newPassword,
+    }),
+  );
+
+  if (response.statusCode == 200) {
+    return true;
+  } else {
+    print(response.body);
+    return false;
+  }
+}
+
 }

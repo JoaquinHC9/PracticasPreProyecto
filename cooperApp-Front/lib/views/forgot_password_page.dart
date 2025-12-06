@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/forgot_password_viewmodel.dart';
+import 'reset_password_confirm_page.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -10,12 +11,10 @@ class ForgotPasswordPage extends StatefulWidget {
 }
 
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
-  final _userController = TextEditingController();
   final _emailController = TextEditingController();
 
   @override
   void dispose() {
-    _userController.dispose();
     _emailController.dispose();
     super.dispose();
   }
@@ -34,14 +33,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         child: Column(
           children: [
             TextField(
-              controller: _userController,
-              decoration: InputDecoration(
-                labelText: 'Ingrese su usuario',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
-              ),
-            ),
-            const SizedBox(height: 20),
-            TextField(
               controller: _emailController,
               decoration: InputDecoration(
                 labelText: 'Ingrese su correo electrónico',
@@ -51,12 +42,26 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
             const SizedBox(height: 30),
             ElevatedButton(
-              onPressed: () {
-                viewModel.sendRecoveryEmail(
-                  context: context,
-                  username: _userController.text,
-                  email: _emailController.text,
-                );
+              onPressed: () async {
+                final email = _emailController.text.trim();
+                if (email.isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Por favor ingrese su correo')),
+                  );
+                  return;
+                }
+
+                bool ok = await viewModel.sendRecoveryCode(context, email);
+
+                if (ok && context.mounted) {
+                  // Navegar a la página de confirmación
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ResetPasswordConfirmPage(email: email),
+                    ),
+                  );
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.green,
